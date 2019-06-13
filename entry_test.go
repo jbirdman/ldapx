@@ -7,9 +7,8 @@ import (
 )
 
 func TestNewEntry(t *testing.T) {
-	entry := NewEntry(nil)
+	entry := NewEntry("cn=test")
 
-	entry.DN = "cn=test"
 	entry.AddAttribute("cn", []string{"test"})
 	entry.AddAttribute("objectclass", []string{"top", "person"})
 
@@ -22,7 +21,7 @@ func TestNewEntry(t *testing.T) {
 }
 
 func TestEntry_AddAttribute(t *testing.T) {
-	entry := NewEntry(nil)
+	entry := NewEntry("cn=test")
 
 	entry.DN = "cn=test"
 	entry.AddAttribute("cn", []string{"test"})
@@ -31,7 +30,7 @@ func TestEntry_AddAttribute(t *testing.T) {
 }
 
 func TestEntry_ReplaceAttribute(t *testing.T) {
-	entry := NewEntry(nil)
+	entry := NewEntry("cn=test")
 
 	entry.DN = "cn=test"
 	entry.AddAttribute("cn", []string{"test"})

@@ -31,22 +31,24 @@ type AttributeChange struct {
 	Value  []string
 }
 
-func NewEntry(entry *ldap.Entry) *Entry {
-	var dn string
-	attributes := make(map[string]*ldap.EntryAttribute)
+func NewEntry(dn string) *Entry {
+	return &Entry{DN: dn, Attributes: make(map[string]*ldap.EntryAttribute), ChangeType: CHANGE_ADD}
+}
 
-	var changeType = CHANGE_ADD
+func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
+	e := NewEntry("")
+
 	if entry != nil {
-		dn = entry.DN
-		changeType = CHANGE_UPDATE
+		e.DN = entry.DN
+		e.ChangeType = CHANGE_UPDATE
 
 		// Copy in the attributes from the ldap entry
 		for _, a := range entry.Attributes {
-			attributes[a.Name] = a
+			e.Attributes[a.Name] = a
 		}
 	}
 
-	return &Entry{ChangeType: changeType, DN: dn, Attributes: attributes}
+	return e
 }
 
 func (e *Entry) ToLdapEntry() *ldap.Entry {
