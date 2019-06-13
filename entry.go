@@ -31,7 +31,7 @@ type AttributeChange struct {
 	Value  []string
 }
 
-func NewEntry(entry *ldap.Entry) Entry {
+func NewEntry(entry *ldap.Entry) *Entry {
 	var dn string
 	attributes := make(map[string]*ldap.EntryAttribute)
 
@@ -46,7 +46,7 @@ func NewEntry(entry *ldap.Entry) Entry {
 		}
 	}
 
-	return Entry{ChangeType: changeType, DN: dn, Attributes: attributes}
+	return &Entry{ChangeType: changeType, DN: dn, Attributes: attributes}
 }
 
 func (e *Entry) ToLdapEntry() *ldap.Entry {
