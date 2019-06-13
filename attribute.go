@@ -38,4 +38,3 @@ func RemoveValues(attr string, values []string, removeValues []string) *ldap.Par
 
 	return &ldap.PartialAttribute{Type: attr, Vals: InterfaceToSlice(removes.ToSlice())}
 }
-

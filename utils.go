@@ -19,4 +19,3 @@ func InterfaceToSlice(t []interface{}) []string {
 
 	return s
 }
-

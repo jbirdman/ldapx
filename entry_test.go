@@ -15,8 +15,8 @@ func TestNewEntry(t *testing.T) {
 
 	entry.Print()
 
-	r := buildAddRequest(entry.DN,entry.Changes)
-	fmt.Printf("request: %+v\n",r)
+	r := buildAddRequest(entry.DN, entry.Changes)
+	fmt.Printf("request: %+v\n", r)
 
 	assert.True(t, true)
 }
@@ -27,7 +27,7 @@ func TestEntry_AddAttribute(t *testing.T) {
 	entry.DN = "cn=test"
 	entry.AddAttribute("cn", []string{"test"})
 
-	assert.Equal(t,"test",entry.GetAttributeValue("cn"))
+	assert.Equal(t, "test", entry.GetAttributeValue("cn"))
 }
 
 func TestEntry_ReplaceAttribute(t *testing.T) {
@@ -39,5 +39,5 @@ func TestEntry_ReplaceAttribute(t *testing.T) {
 
 	fmt.Println(entry.Changes)
 
-	assert.Equal(t,"test2",entry.GetAttributeValue("cn"))
+	assert.Equal(t, "test2", entry.GetAttributeValue("cn"))
 }
