@@ -49,20 +49,30 @@ func NewEntry(entry *ldap.Entry) Entry {
 	return Entry{ChangeType: changeType, DN: dn, Attributes: attributes}
 }
 
-func (c *Entry) Print() {
-	fmt.Printf("DN: %s\n", c.DN)
-	for _, attr := range c.Attributes {
+func (e *Entry) ToLdapEntry() *ldap.Entry {
+	attrs := make(map[string][]string)
+
+	for k, v := range e.Attributes {
+		attrs[k] = v.Values
+	}
+
+	return ldap.NewEntry(e.DN, attrs)
+}
+
+func (e *Entry) Print() {
+	fmt.Printf("DN: %s\n", e.DN)
+	for _, attr := range e.Attributes {
 		attr.Print()
 	}
 }
 
-func (c *Entry) Clear() {
-	c.ChangeType = CHANGE_ADD
-	c.Changes = nil
+func (e *Entry) Clear() {
+	e.ChangeType = CHANGE_ADD
+	e.Changes = nil
 }
 
-func (c *Entry) GetAttributeValues(attribute string) []string {
-	return c.Attributes[attribute].Values
+func (e *Entry) GetAttributeValues(attribute string) []string {
+	return e.Attributes[attribute].Values
 }
 
 func (e *Entry) GetAttributeValue(attribute string) string {
@@ -73,27 +83,27 @@ func (e *Entry) GetAttributeValue(attribute string) string {
 	return values[0]
 }
 
-func (c *Entry) AddAttributeChange(action string, attr string, value []string) {
-	c.Changes = append(c.Changes, AttributeChange{Action: action, Attr: attr, Value: value})
+func (e *Entry) AddAttributeChange(action string, attr string, value []string) {
+	e.Changes = append(e.Changes, AttributeChange{Action: action, Attr: attr, Value: value})
 }
-func (c *Entry) AddAttribute(attr string, value []string) {
-	a, ok := c.Attributes[attr]
+func (e *Entry) AddAttribute(attr string, value []string) {
+	a, ok := e.Attributes[attr]
 	if !ok {
 		a = ldap.NewEntryAttribute(attr, value)
 	} else {
 		a.Values = append(a.Values, value...)
 	}
-	c.Attributes[attr] = a
-	c.AddAttributeChange("add", attr, value)
+	e.Attributes[attr] = a
+	e.AddAttributeChange("add", attr, value)
 }
 
-func (c *Entry) ReplaceAttribute(attr string, value []string) {
-	c.Attributes[attr] = ldap.NewEntryAttribute(attr, value)
-	c.AddAttributeChange("replace", attr, value)
+func (e *Entry) ReplaceAttribute(attr string, value []string) {
+	e.Attributes[attr] = ldap.NewEntryAttribute(attr, value)
+	e.AddAttributeChange("replace", attr, value)
 }
 
-func (c *Entry) DeleteAttribute(attr string, value []string) {
-	old, ok := c.Attributes[attr]
+func (e *Entry) DeleteAttribute(attr string, value []string) {
+	old, ok := e.Attributes[attr]
 	if !ok {
 		return
 	}
@@ -113,26 +123,26 @@ func (c *Entry) DeleteAttribute(attr string, value []string) {
 				a.Values = append(a.Values, v)
 			}
 		}
-		c.Attributes[attr] = a
+		e.Attributes[attr] = a
 	} else {
-		delete(c.Attributes, attr)
+		delete(e.Attributes, attr)
 	}
 
-	c.AddAttributeChange("delete", attr, value)
+	e.AddAttributeChange("delete", attr, value)
 }
 
-func (c Entry) Update(conn *Conn) error {
-	if len(c.Changes) == 0 {
+func (e Entry) Update(conn *Conn) error {
+	if len(e.Changes) == 0 {
 		return nil
 	}
 
-	switch c.ChangeType {
+	switch e.ChangeType {
 	case CHANGE_ADD:
-		return conn.Add(buildAddRequest(c.DN, c.Changes))
+		return conn.Add(buildAddRequest(e.DN, e.Changes))
 	case CHANGE_UPDATE:
-		return conn.Modify(buildModifyRequest(c.DN, c.Changes))
+		return conn.Modify(buildModifyRequest(e.DN, e.Changes))
 	case CHANGE_DELETE:
-		return conn.Del(buildDelRequest(c.DN))
+		return conn.Del(buildDelRequest(e.DN))
 	}
 
 	return nil

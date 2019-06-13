@@ -146,6 +146,7 @@ func (c *Conn) ExecuteAs(dn string, password string, f func(*ldap.Conn) (interfa
 	if err != nil {
 		return nil, err
 	}
+	//noinspection GoUnhandledErrorResult
 	defer c.rebind(conn)
 
 	return f(conn)
@@ -212,6 +213,7 @@ func (c *Conn) Compare(dn string, attribute string, value string) (bool, error) 
 func (c *Conn) CheckBind(dn string, password string) error {
 	_, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
 		err := conn.Bind(dn, password)
+		//noinspection GoUnhandledErrorResult
 		defer c.rebind(conn)
 		return nil, err
 	})
