@@ -2,9 +2,7 @@ package ldapx
 
 import (
 	"fmt"
-	mapset "github.com/deckarep/golang-set"
 	"gopkg.in/ldap.v2"
-	"reflect"
 )
 
 const (
@@ -91,80 +89,6 @@ func (e *Entry) GetAttributeValue(attribute string) string {
 
 func (e *Entry) AddAttributeChange(action string, attr string, value []string) {
 	e.Changes = append(e.Changes, AttributeChange{Action: action, Attr: attr, Value: value})
-}
-
-func (e *Entry) AddAttributeValues(attr string, value []string) {
-	var values []string
-
-	a, ok := e.Attributes[attr]
-	if !ok {
-		a = ldap.NewEntryAttribute(attr, value)
-		values = value
-	} else {
-		oldValues := mapset.NewSetFromSlice(SliceToInterface(a.Values))
-		newValues := mapset.NewSetFromSlice(SliceToInterface(value))
-
-		valueSet := newValues.Difference(oldValues)
-
-		for _, v := range valueSet.ToSlice() {
-			a.Values = append(a.Values, v.(string))
-			values = append(values, v.(string))
-		}
-	}
-
-	if len(values) > 0 {
-		e.Attributes[attr] = a
-		e.AddAttributeChange("add", attr, values)
-	}
-}
-
-func (e *Entry) AddAttributeValue(attr string, value string) {
-	e.AddAttributeValues(attr, []string{value})
-}
-
-func (e *Entry) ReplaceAttributeValues(attr string, value []string) {
-	if reflect.DeepEqual(value, e.Attributes[attr].Values) {
-		return
-	}
-	e.Attributes[attr] = ldap.NewEntryAttribute(attr, value)
-	e.AddAttributeChange("replace", attr, value)
-}
-
-func (e *Entry) ReplaceAttributeValue(attr string, value string) {
-	e.ReplaceAttributeValues(attr, []string{value})
-}
-
-func (e *Entry) DeleteAttributeValues(attr string, value []string) {
-	old, ok := e.Attributes[attr]
-	if !ok {
-		return
-	}
-	if len(value) > 0 {
-		a := ldap.NewEntryAttribute(attr, nil)
-
-		for _, v := range old.Values {
-			found := false
-			for _, nv := range value {
-				if nv == v {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				a.Values = append(a.Values, v)
-			}
-		}
-		e.Attributes[attr] = a
-	} else {
-		delete(e.Attributes, attr)
-	}
-
-	e.AddAttributeChange("delete", attr, value)
-}
-
-func (e *Entry) DeleteAttributeValue(attr string, value string) {
-	e.DeleteAttributeValues(attr, []string{value})
 }
 
 func (e Entry) Update(conn *Conn) error {
