@@ -2,7 +2,9 @@ package ldapx
 
 import (
 	"fmt"
+	mapset "github.com/deckarep/golang-set"
 	"gopkg.in/ldap.v2"
+	"reflect"
 )
 
 const (
@@ -19,9 +21,12 @@ type Entry struct {
 }
 
 type MutableEntry interface {
-	AddAttribute(attr string, value []string)
-	ReplaceAttribute(attr string, value []string)
-	DeleteAttribute(attr string, value []string)
+	AddAttributeValue(attr string, value string)
+	AddAttributeValues(attr string, value []string)
+	ReplaceAttributeValue(attr string, value string)
+	ReplaceAttributeValues(attr string, value []string)
+	DeleteAttributeValue(attr string, value string)
+	DeleteAttributeValues(attr string, value []string)
 	Update(conn *Conn) error
 }
 
@@ -68,8 +73,7 @@ func (e *Entry) Print() {
 	}
 }
 
-func (e *Entry) Clear() {
-	e.ChangeType = CHANGE_ADD
+func (e *Entry) ResetChanges() {
 	e.Changes = nil
 }
 
@@ -88,23 +92,49 @@ func (e *Entry) GetAttributeValue(attribute string) string {
 func (e *Entry) AddAttributeChange(action string, attr string, value []string) {
 	e.Changes = append(e.Changes, AttributeChange{Action: action, Attr: attr, Value: value})
 }
-func (e *Entry) AddAttribute(attr string, value []string) {
+
+func (e *Entry) AddAttributeValues(attr string, value []string) {
+	var values []string
+
 	a, ok := e.Attributes[attr]
 	if !ok {
 		a = ldap.NewEntryAttribute(attr, value)
+		values = value
 	} else {
-		a.Values = append(a.Values, value...)
+		oldValues := mapset.NewSetFromSlice(SliceToInterface(a.Values))
+		newValues := mapset.NewSetFromSlice(SliceToInterface(value))
+
+		valueSet := newValues.Difference(oldValues)
+
+		for _, v := range valueSet.ToSlice() {
+			a.Values = append(a.Values, v.(string))
+			values = append(values, v.(string))
+		}
 	}
-	e.Attributes[attr] = a
-	e.AddAttributeChange("add", attr, value)
+
+	if len(values) > 0 {
+		e.Attributes[attr] = a
+		e.AddAttributeChange("add", attr, values)
+	}
 }
 
-func (e *Entry) ReplaceAttribute(attr string, value []string) {
+func (e *Entry) AddAttributeValue(attr string, value string) {
+	e.AddAttributeValues(attr, []string{value})
+}
+
+func (e *Entry) ReplaceAttributeValues(attr string, value []string) {
+	if reflect.DeepEqual(value, e.Attributes[attr].Values) {
+		return
+	}
 	e.Attributes[attr] = ldap.NewEntryAttribute(attr, value)
 	e.AddAttributeChange("replace", attr, value)
 }
 
-func (e *Entry) DeleteAttribute(attr string, value []string) {
+func (e *Entry) ReplaceAttributeValue(attr string, value string) {
+	e.ReplaceAttributeValues(attr, []string{value})
+}
+
+func (e *Entry) DeleteAttributeValues(attr string, value []string) {
 	old, ok := e.Attributes[attr]
 	if !ok {
 		return
@@ -131,6 +161,10 @@ func (e *Entry) DeleteAttribute(attr string, value []string) {
 	}
 
 	e.AddAttributeChange("delete", attr, value)
+}
+
+func (e *Entry) DeleteAttributeValue(attr string, value string) {
+	e.DeleteAttributeValues(attr, []string{value})
 }
 
 func (e Entry) Update(conn *Conn) error {
