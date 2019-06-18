@@ -1,6 +1,7 @@
 package ldapx
 
 import (
+	"errors"
 	"fmt"
 	"gopkg.in/ldap.v2"
 )
@@ -16,6 +17,7 @@ type Entry struct {
 	DN         string
 	Attributes map[string]*ldap.EntryAttribute
 	Changes    []AttributeChange
+	committed  bool
 }
 
 type MutableEntry interface {
@@ -25,6 +27,7 @@ type MutableEntry interface {
 	ReplaceAttributeValues(attr string, value []string)
 	DeleteAttributeValue(attr string, value string)
 	DeleteAttributeValues(attr string, value []string)
+	DeleteAttribute(attr string)
 	Update(conn *Conn) error
 }
 
@@ -76,7 +79,11 @@ func (e *Entry) ResetChanges() {
 }
 
 func (e *Entry) GetAttributeValues(attribute string) []string {
-	return e.Attributes[attribute].Values
+	v, ok := e.Attributes[attribute]
+	if !ok {
+		return nil
+	}
+	return v.Values
 }
 
 func (e *Entry) GetAttributeValue(attribute string) string {
@@ -91,10 +98,15 @@ func (e *Entry) AddAttributeChange(action string, attr string, value []string) {
 	e.Changes = append(e.Changes, AttributeChange{Action: action, Attr: attr, Value: value})
 }
 
-func (e Entry) Update(conn *Conn) error {
+func (e *Entry) Update(conn *Conn) error {
 	if len(e.Changes) == 0 {
 		return nil
 	}
+
+	if e.committed {
+		return errors.New("entry can only be updated once")
+	}
+	e.committed = true
 
 	switch e.ChangeType {
 	case CHANGE_ADD:
