@@ -16,4 +16,3 @@ func (e *Entry) ReplaceAttributeValues(attr string, value []string) {
 func (e *Entry) ReplaceAttributeValue(attr string, value string) {
 	e.ReplaceAttributeValues(attr, []string{value})
 }
-

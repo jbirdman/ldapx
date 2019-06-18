@@ -33,4 +33,3 @@ func (e *Entry) AddAttributeValues(attr string, value []string) {
 func (e *Entry) AddAttributeValue(attr string, value string) {
 	e.AddAttributeValues(attr, []string{value})
 }
-
