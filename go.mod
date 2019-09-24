@@ -1,7 +1,7 @@
 module git.jcu.edu.au/go/ldapx
 
 require (
-	git.jcu.edu.au/go/ldapurl v1.0.0
+	git.jcu.edu.au/go/ldapurl v1.0.1
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set v1.7.1
 	github.com/go-baa/pool v0.0.0-20160705042609-a5db46399990
