@@ -4,8 +4,8 @@ package ldapx
 
 import (
 	"crypto/tls"
+	"github.com/go-ldap/ldap/v3"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/ldap.v2"
 	"testing"
 )
 

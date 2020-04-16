@@ -1,4 +1,4 @@
-// Package provides a higher level abstration around gopkg.in/ldap.v2
+// Package provides a higher level abstration around github.com/go-ldap/ldap/v3
 // that makes use of connection pooling.
 package ldapx
 
@@ -6,7 +6,7 @@ import (
 	"crypto/tls"
 	"git.jcu.edu.au/go/ldapurl"
 	"github.com/go-baa/pool"
-	"gopkg.in/ldap.v2"
+	"github.com/go-ldap/ldap/v3"
 	"log"
 )
 

@@ -1,9 +1,9 @@
 package ldapx
 
-import "gopkg.in/ldap.v2"
+import "github.com/go-ldap/ldap/v3"
 
-func NewModifyRequest(dn string) *ldap.ModifyRequest {
-	return ldap.NewModifyRequest(dn)
+func NewModifyRequest(dn string, controls []ldap.Control) *ldap.ModifyRequest {
+	return ldap.NewModifyRequest(dn, controls)
 }
 
 func NewPasswordModifyRequesy(userIdentity string, oldPassword string, newPassword string) *ldap.PasswordModifyRequest {
@@ -21,8 +21,8 @@ func NewSearchRequest(
 	return ldap.NewSearchRequest(BaseDN, Scope, DerefAliases, SizeLimit, TimeLimit, TypesOnly, Filter, Attributes, Controls)
 }
 
-func NewAddRequest(dn string) *ldap.AddRequest {
-	return ldap.NewAddRequest(dn)
+func NewAddRequest(dn string, controls []ldap.Control) *ldap.AddRequest {
+	return ldap.NewAddRequest(dn, controls)
 }
 
 func NewDelRequest(dn string, controls []ldap.Control) *ldap.DelRequest {

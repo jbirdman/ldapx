@@ -3,7 +3,7 @@ package ldapx
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/ldap.v2"
+	"github.com/go-ldap/ldap/v3"
 )
 
 const (
@@ -121,7 +121,7 @@ func (e *Entry) Update(conn *Conn) error {
 }
 
 func buildAddRequest(dn string, changes []AttributeChange) *ldap.AddRequest {
-	r := NewAddRequest(dn)
+	r := NewAddRequest(dn, nil)
 
 	for _, change := range changes {
 		if change.Action != "add" && change.Action != "replace" {
@@ -135,7 +135,7 @@ func buildAddRequest(dn string, changes []AttributeChange) *ldap.AddRequest {
 }
 
 func buildModifyRequest(dn string, changes []AttributeChange) *ldap.ModifyRequest {
-	r := NewModifyRequest(dn)
+	r := NewModifyRequest(dn, nil)
 
 	for _, change := range changes {
 		switch change.Action {
