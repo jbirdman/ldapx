@@ -8,5 +8,9 @@ func (c Conn) Lookup(dn string) (*Entry, error) {
 		return nil, err
 	}
 
-	return NewEntryFromLdapEntry(result.Entries[0]),nil
+	return NewEntryFromLdapEntry(result.Entries[0]), nil
+}
+
+func (c Conn) QuickSearch(dn string, filter string, attributes []string) (*ldap.SearchResult, error) {
+	return c.Search(NewSearchRequest(dn, ldap.ScopeWholeSubtree, ldap.DerefAlways, 1, 0, false, filter, attributes, nil))
 }

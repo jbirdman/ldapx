@@ -36,6 +36,7 @@ type Client interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 	SearchWithPaging(request *ldap.SearchRequest, pagingSize uint32) (*ldap.SearchResult, error)
 	Lookup(dn string) (*Entry, error)
+	QuickSearch(dn string, filter string, attributes []string) (*ldap.SearchResult, error)
 }
 
 var _ Client = &Conn{}
