@@ -28,6 +28,7 @@ type MutableEntry interface {
 	DeleteAttributeValue(attr string, value string)
 	DeleteAttributeValues(attr string, value []string)
 	DeleteAttribute(attr string)
+	SyncAttributeValues(attr string, value []string)
 	Update(conn *Conn) error
 }
 

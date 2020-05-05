@@ -1,5 +1,5 @@
-git.jcu.edu.au/go/ldapurl v1.0.3 h1:FcXRgQAgnNnjAF18sVU9wvAwH02bku9wDsrvjsujW4s=
-git.jcu.edu.au/go/ldapurl v1.0.3/go.mod h1:427/EKWSFi8V9o3/8Su6Gm1ICgs2++BoX1rfP2AyeiU=
+git.jcu.edu.au/go/ldapurl v1.0.4 h1:2m/Kol5lgvIrC1pu/o2tBHuh3G+B5UIehZcQOJahZSs=
+git.jcu.edu.au/go/ldapurl v1.0.4/go.mod h1:427/EKWSFi8V9o3/8Su6Gm1ICgs2++BoX1rfP2AyeiU=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
