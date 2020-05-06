@@ -6,7 +6,8 @@ import (
 )
 
 func (e *Entry) ReplaceAttributeValues(attr string, value []string) {
-	if reflect.DeepEqual(value, e.Attributes[attr].Values) {
+	_,ok := e.Attributes[attr]
+	if ok && reflect.DeepEqual(value, e.Attributes[attr].Values) {
 		return
 	}
 	e.Attributes[attr] = ldap.NewEntryAttribute(attr, value)

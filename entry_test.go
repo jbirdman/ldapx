@@ -34,6 +34,14 @@ func TestEntry_ReplaceAttribute(t *testing.T) {
 	assert.Equal(t, "test2", entry.GetAttributeValue("cn"))
 }
 
+func TestEntry_ReplaceAttributeValuesEmptyEntry(t *testing.T) {
+	entry := NewEntry("cn=test")
+
+	entry.ReplaceAttributeValues("cn", []string{"test2"})
+
+	assert.Equal(t, "test2", entry.GetAttributeValue("cn"))
+}
+
 func TestEntry_ReplaceAttributeIdempotent(t *testing.T) {
 	entry := NewEntry("cn=test")
 
