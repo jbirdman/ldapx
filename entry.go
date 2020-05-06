@@ -30,6 +30,7 @@ type MutableEntry interface {
 	DeleteAttribute(attr string)
 	SyncAttributeValues(attr string, value []string)
 	Update(conn *Conn) error
+	Changed() bool
 }
 
 type AttributeChange struct {
@@ -68,11 +69,15 @@ func (e *Entry) ToLdapEntry() *ldap.Entry {
 	return ldap.NewEntry(e.DN, attrs)
 }
 
-func (e *Entry) Print() {
+func (e Entry) Print() {
 	fmt.Printf("DN: %s\n", e.DN)
 	for _, attr := range e.Attributes {
 		attr.Print()
 	}
+}
+
+func (e Entry) Changed() bool {
+	return len(e.Changes) > 0
 }
 
 func (e *Entry) ResetChanges() {
@@ -100,7 +105,7 @@ func (e *Entry) AddAttributeChange(action string, attr string, value []string) {
 }
 
 func (e *Entry) Update(conn *Conn) error {
-	if len(e.Changes) == 0 {
+	if !e.Changed() {
 		return nil
 	}
 
