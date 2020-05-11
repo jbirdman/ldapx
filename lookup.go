@@ -38,5 +38,5 @@ func FindEntry(conn *Conn, dn string, filter string, attributes []string) (*Entr
 }
 
 func (c *Conn) QuickSearch(dn string, filter string, attributes []string) (*ldap.SearchResult, error) {
-	return c.Search(NewSearchRequest(dn, ldap.ScopeWholeSubtree, ldap.DerefAlways, 1, 0, false, filter, attributes, nil))
+	return c.Search(NewSearchRequest(dn, ldap.ScopeWholeSubtree, ldap.DerefAlways, 0, 0, false, filter, attributes, nil))
 }
