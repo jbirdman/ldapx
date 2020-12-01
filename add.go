@@ -5,8 +5,6 @@ import (
 )
 
 func (e *Entry) AddAttributeValues(attr string, value []string) {
-	var values []string
-
 	if len(value) == 0 {
 		return
 	}
@@ -38,7 +36,7 @@ func (e *Entry) AddAttributeValues(attr string, value []string) {
 	}
 
 	if len(addedValues) > 0 {
-		e.AddAttributeChange("add", attr, values)
+		e.AddAttributeChange("add", attr, addedValues)
 	}
 }
 
