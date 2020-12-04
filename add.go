@@ -16,7 +16,7 @@ func (e *Entry) AddAttributeValues(attr string, value []string) {
 		return
 	}
 
-	var addedValues []string
+	var addedValues []string // nolint:prealloc
 
 	for _, o := range value {
 		var found bool

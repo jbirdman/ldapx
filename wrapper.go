@@ -11,14 +11,14 @@ func NewPasswordModifyRequesy(userIdentity string, oldPassword string, newPasswo
 }
 
 func NewSearchRequest(
-	BaseDN string,
-	Scope, DerefAliases, SizeLimit, TimeLimit int,
-	TypesOnly bool,
-	Filter string,
-	Attributes []string,
-	Controls []ldap.Control,
+	baseDN string,
+	scope, derefAliases, sizeLimit, timeLimit int,
+	typesOnly bool,
+	filter string,
+	attributes []string,
+	controls []ldap.Control,
 ) *ldap.SearchRequest {
-	return ldap.NewSearchRequest(BaseDN, Scope, DerefAliases, SizeLimit, TimeLimit, TypesOnly, Filter, Attributes, Controls)
+	return ldap.NewSearchRequest(baseDN, scope, derefAliases, sizeLimit, timeLimit, typesOnly, filter, attributes, controls)
 }
 
 func NewAddRequest(dn string, controls []ldap.Control) *ldap.AddRequest {

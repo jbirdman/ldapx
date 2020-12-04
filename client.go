@@ -18,12 +18,6 @@ type Conn struct {
 	tlsConfig    *tls.Config
 }
 
-type conn struct {
-	conn         *ldap.Conn
-	bindDN       string
-	bindPassword string
-}
-
 type Client interface {
 	Execute(f func(*ldap.Conn) (interface{}, error)) (interface{}, error)
 	ExecuteAs(dn string, password string, f func(*ldap.Conn) (interface{}, error)) (interface{}, error)
@@ -43,15 +37,15 @@ type Client interface {
 var _ Client = &Conn{}
 
 func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (*Conn, error) {
-	ldapUrl, err := ldapurl.Parse(url)
+	ldapURL, err := ldapurl.Parse(url)
 	if err != nil {
 		return nil, err
 	}
 
-	pl, err := setupConnectionPool(ldapUrl, bindDN, bindPassword, tlsConfig)
+	pl, err := setupConnectionPool(ldapURL, bindDN, bindPassword, tlsConfig)
 
 	return &Conn{
-		ldapURL:      ldapUrl,
+		ldapURL:      ldapURL,
 		pool:         pl,
 		bindDN:       bindDN,
 		bindPassword: bindPassword,
@@ -59,9 +53,9 @@ func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Conf
 	}, err
 }
 
-func setupConnectionPool(ldapUrl *ldapurl.LdapURL, bindDN string, bindPassword string, tlsConfig *tls.Config) (*pool.Pool, error) {
+func setupConnectionPool(ldapURL *ldapurl.LdapURL, bindDN string, bindPassword string, tlsConfig *tls.Config) (*pool.Pool, error) {
 	pl, err := pool.New(1, 10, func() interface{} {
-		conn, err := dialUrl(ldapUrl, tlsConfig)
+		conn, err := dialURL(ldapURL, tlsConfig)
 		if err != nil {
 			log.Fatalf("create client connection error: %v\n", err)
 		}
@@ -89,7 +83,7 @@ func setupConnectionPool(ldapUrl *ldapurl.LdapURL, bindDN string, bindPassword s
 	return pl, nil
 }
 
-func dialUrl(ldapURL *ldapurl.LdapURL, tlsConfig *tls.Config) (*ldap.Conn, error) {
+func dialURL(ldapURL *ldapurl.LdapURL, tlsConfig *tls.Config) (*ldap.Conn, error) {
 	hostname := ldapURL.BuildHostnamePortString()
 	var l *ldap.Conn
 	var err error
@@ -103,10 +97,6 @@ func dialUrl(ldapURL *ldapurl.LdapURL, tlsConfig *tls.Config) (*ldap.Conn, error
 	return l, err
 }
 
-func (c *Conn) getAs(dn string, password string) (*conn, error) {
-	panic("Unimplemeted")
-}
-
 func (c *Conn) get() (*ldap.Conn, error) {
 	lc, err := c.pool.Get()
 	if err != nil {
@@ -114,14 +104,6 @@ func (c *Conn) get() (*ldap.Conn, error) {
 	}
 
 	return lc.(*ldap.Conn), err
-}
-
-func (c *Conn) mustGet() *ldap.Conn {
-	lc, err := c.get()
-	if err != nil {
-		panic(err)
-	}
-	return lc
 }
 
 func (c *Conn) put(lc *ldap.Conn) {
@@ -149,8 +131,7 @@ func (c *Conn) ExecuteAs(dn string, password string, f func(*ldap.Conn) (interfa
 	if err != nil {
 		return nil, err
 	}
-	//noinspection GoUnhandledErrorResult
-	defer c.rebind(conn)
+	defer c.rebind(conn) // nolint: errcheck, gas
 
 	return f(conn)
 }
@@ -216,8 +197,7 @@ func (c *Conn) Compare(dn string, attribute string, value string) (bool, error) 
 func (c *Conn) CheckBind(dn string, password string) error {
 	_, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
 		err := conn.Bind(dn, password)
-		//noinspection GoUnhandledErrorResult
-		defer c.rebind(conn)
+		defer c.rebind(conn) // nolint: errcheck, gas
 		return nil, err
 	})
 	return err

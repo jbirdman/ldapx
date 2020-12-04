@@ -7,17 +7,18 @@ import (
 )
 
 const (
-	CHANGE_ADD    = "add"
-	CHANGE_UPDATE = "update"
-	CHANGE_DELETE = "delete"
+	ChangeAdd    = "add"
+	ChangeUpdate = "update"
+	ChangeDelete = "delete"
 )
 
 type Entry struct {
-	ChangeType string
-	DN         string
-	Attributes map[string]*ldap.EntryAttribute
-	Changes    []AttributeChange
-	committed  bool
+	ChangeType         string
+	DN                 string
+	Attributes         map[string]*ldap.EntryAttribute
+	Changes            []AttributeChange
+	committed          bool
+	originalAttributes map[string]*ldap.EntryAttribute
 }
 
 type MutableEntry interface {
@@ -39,8 +40,16 @@ type AttributeChange struct {
 	Value  []string
 }
 
+func cloneAttribute(a *ldap.EntryAttribute) *ldap.EntryAttribute {
+	return &ldap.EntryAttribute{
+		Name:       a.Name,
+		Values:     append([]string(nil), a.Values...),
+		ByteValues: append([][]byte(nil), a.ByteValues...),
+	}
+}
+
 func NewEntry(dn string) *Entry {
-	return &Entry{DN: dn, Attributes: make(map[string]*ldap.EntryAttribute), ChangeType: CHANGE_ADD}
+	return &Entry{DN: dn, Attributes: make(map[string]*ldap.EntryAttribute), originalAttributes: make(map[string]*ldap.EntryAttribute), ChangeType: ChangeAdd}
 }
 
 func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
@@ -48,11 +57,12 @@ func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
 
 	if entry != nil {
 		e.DN = entry.DN
-		e.ChangeType = CHANGE_UPDATE
+		e.ChangeType = ChangeUpdate
 
 		// Copy in the attributes from the ldap entry
 		for _, a := range entry.Attributes {
 			e.Attributes[a.Name] = a
+			e.originalAttributes[a.Name] = cloneAttribute(a)
 		}
 	}
 
@@ -115,11 +125,11 @@ func (e *Entry) Update(conn *Conn) error {
 	e.committed = true
 
 	switch e.ChangeType {
-	case CHANGE_ADD:
+	case ChangeAdd:
 		return conn.Add(buildAddRequest(e.DN, e.Changes))
-	case CHANGE_UPDATE:
+	case ChangeUpdate:
 		return conn.Modify(buildModifyRequest(e.DN, e.Changes))
-	case CHANGE_DELETE:
+	case ChangeDelete:
 		return conn.Del(buildDelRequest(e.DN))
 	}
 

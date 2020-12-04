@@ -3,6 +3,7 @@ package ldapx
 import (
 	"fmt"
 	"github.com/go-ldap/ldap/v3"
+	"strings"
 )
 
 func (c *Conn) Lookup(dn string) (*Entry, error) {
@@ -39,4 +40,22 @@ func FindEntry(conn *Conn, dn string, filter string, attributes []string) (*Entr
 
 func (c *Conn) QuickSearch(dn string, filter string, attributes []string) (*ldap.SearchResult, error) {
 	return c.Search(NewSearchRequest(dn, ldap.ScopeWholeSubtree, ldap.DerefAlways, 0, 0, false, filter, attributes, nil))
+}
+
+// Return value of first (leftmost) RDN that matches attribute name
+func GetAttributeFromDN(attr, dn string) (string, error) {
+	d, err := ldap.ParseDN(dn)
+	if err != nil {
+		return "", err
+	}
+
+	for _, a := range d.RDNs {
+		for _, av := range a.Attributes {
+			if strings.EqualFold(av.Type, attr) {
+				return av.Value, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("dn does not contain attribute '%s'", attr)
 }
