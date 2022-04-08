@@ -5,8 +5,8 @@ import (
 )
 
 func (e *Entry) DeleteAttributeValues(attr string, value []string) {
-	a, ok := e.Attributes[attr]
-	if !ok {
+	a := e.Attributes.Get(attr)
+	if a == nil {
 		return
 	}
 	var deletedValues []string
@@ -33,10 +33,10 @@ func (e *Entry) DeleteAttributeValues(attr string, value []string) {
 	}
 
 	if len(remainingValues) == 0 {
-		delete(e.Attributes, attr)
+		e.Attributes.Delete(attr)
 		e.AddAttributeChange("delete", attr, nil)
 	} else {
-		e.Attributes[attr] = ldap.NewEntryAttribute(attr, remainingValues)
+		e.Attributes.PutEntryAttribute(ldap.NewEntryAttribute(attr, remainingValues))
 		e.AddAttributeChange("delete", attr, deletedValues)
 	}
 }
@@ -46,6 +46,6 @@ func (e *Entry) DeleteAttributeValue(attr string, value string) {
 }
 
 func (e *Entry) DeleteAttribute(attr string) {
-	delete(e.Attributes, attr)
+	e.Attributes.Delete(attr)
 	e.AddAttributeChange("delete", attr, nil)
 }

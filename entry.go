@@ -1,9 +1,12 @@
 package ldapx
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/go-ldap/ldap/v3"
+	"sort"
+	"strings"
 )
 
 const (
@@ -13,12 +16,12 @@ const (
 )
 
 type Entry struct {
-	ChangeType         string
-	DN                 string
-	Attributes         map[string]*ldap.EntryAttribute
-	Changes            []AttributeChange
+	ChangeType         string            `json:"change_type"`
+	DN                 string            `json:"dn"`
+	Attributes         AttributeMap      `json:"attributes,omitifempty"`
+	Changes            []AttributeChange `json:"changes,omitifempty"`
 	committed          bool
-	originalAttributes map[string]*ldap.EntryAttribute
+	originalAttributes AttributeMap
 }
 
 type MutableEntry interface {
@@ -49,7 +52,11 @@ func cloneAttribute(a *ldap.EntryAttribute) *ldap.EntryAttribute {
 }
 
 func NewEntry(dn string) *Entry {
-	return &Entry{DN: dn, Attributes: make(map[string]*ldap.EntryAttribute), originalAttributes: make(map[string]*ldap.EntryAttribute), ChangeType: ChangeAdd}
+	return &Entry{
+		DN:                 dn,
+		Attributes:         NewAttributeMap(),
+		originalAttributes: NewAttributeMap(),
+		ChangeType:         ChangeAdd}
 }
 
 func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
@@ -61,8 +68,8 @@ func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
 
 		// Copy in the attributes from the ldap entry
 		for _, a := range entry.Attributes {
-			e.Attributes[a.Name] = a
-			e.originalAttributes[a.Name] = cloneAttribute(a)
+			e.Attributes.PutEntryAttribute(a)
+			e.originalAttributes.PutEntryAttribute(a)
 		}
 	}
 
@@ -72,18 +79,42 @@ func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
 func (e *Entry) ToLdapEntry() *ldap.Entry {
 	attrs := make(map[string][]string)
 
-	for k, v := range e.Attributes {
-		attrs[k] = v.Values
+	for _, k := range e.AttributeNames() {
+		attrs[k] = e.GetAttributeValues(k)
 	}
 
 	return ldap.NewEntry(e.DN, attrs)
 }
 
 func (e Entry) Print() {
-	fmt.Printf("DN: %s\n", e.DN)
-	for _, attr := range e.Attributes {
-		attr.Print()
+	e.ToLdapEntry().Print()
+	//fmt.Printf("DN: %s\n", e.DN)
+	//for _, attr := range e.Attributes {
+	//	attr.Print()
+	//}
+}
+
+func (e Entry) PrettyPrint(indent int) {
+	e.ToLdapEntry().PrettyPrint(indent)
+}
+
+func (e Entry) AttributeNames() []string {
+	return e.Attributes.AttributeNames()
+}
+
+func (e Entry) ToLDIF() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "dn: %s\n", e.DN)
+
+	keys := e.AttributeNames()
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		for _, v := range e.Attributes.Get(k).Values {
+			fmt.Fprintf(&b, "%s: %s\n", k, v)
+		}
 	}
+	return b.String()
 }
 
 func (e Entry) Changed() bool {
@@ -95,8 +126,8 @@ func (e *Entry) ResetChanges() {
 }
 
 func (e *Entry) GetAttributeValues(attribute string) []string {
-	v, ok := e.Attributes[attribute]
-	if !ok {
+	v := e.Attributes.Get(attribute)
+	if v == nil {
 		return nil
 	}
 	return v.Values
@@ -136,6 +167,16 @@ func (e *Entry) Update(conn *Conn) error {
 	return nil
 }
 
+func (e Entry) Clone() *Entry {
+	dest := NewEntry(e.DN)
+
+	for _, a := range e.AttributeNames() {
+		dest.AddAttributeValues(a, e.GetAttributeValues(a))
+	}
+
+	return dest
+}
+
 func buildAddRequest(dn string, changes []AttributeChange) *ldap.AddRequest {
 	r := NewAddRequest(dn, nil)
 
@@ -169,4 +210,16 @@ func buildModifyRequest(dn string, changes []AttributeChange) *ldap.ModifyReques
 
 func buildDelRequest(dn string) *ldap.DelRequest {
 	return NewDelRequest(dn, nil)
+}
+
+func (e *Entry) RenameAttribute(from, to string) {
+	e.Attributes.Rename(from, to)
+}
+
+func (e Entry) ToJSON() string {
+	b, err := json.Marshal(e)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }

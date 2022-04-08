@@ -9,9 +9,9 @@ func (e *Entry) AddAttributeValues(attr string, value []string) {
 		return
 	}
 
-	a, ok := e.Attributes[attr]
-	if !ok {
-		e.Attributes[attr] = ldap.NewEntryAttribute(attr, value)
+	a := e.Attributes.Get(attr)
+	if a == nil {
+		e.Attributes.PutEntryAttribute(ldap.NewEntryAttribute(attr, value))
 		e.AddAttributeChange("add", attr, value)
 		return
 	}
