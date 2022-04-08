@@ -16,8 +16,8 @@ const (
 )
 
 type Entry struct {
-	ChangeType         string            `json:"change_type"`
 	DN                 string            `json:"dn"`
+	ChangeType         string            `json:"change_type"`
 	Attributes         AttributeMap      `json:"attributes,omitifempty"`
 	Changes            []AttributeChange `json:"changes,omitifempty"`
 	committed          bool

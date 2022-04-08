@@ -5,47 +5,43 @@ import (
 	"strings"
 )
 
-type AttributeMap struct {
-	Attrs map[string]*ldap.EntryAttribute `json:"Attrs"`
-}
+type AttributeMap map[string]*ldap.EntryAttribute
 
 func NewAttributeMap() AttributeMap {
-	return AttributeMap{
-		make(map[string]*ldap.EntryAttribute),
-	}
+	return make(AttributeMap)
 }
 
 func (m AttributeMap) AttributeNames() []string {
 	var names []string
-	for _, a := range m.Attrs {
+	for _, a := range m {
 		names = append(names, a.Name)
 	}
 	return names
 }
 
 func (m AttributeMap) Get(attr string) *ldap.EntryAttribute {
-	v, _ := m.Attrs[strings.ToLower(attr)]
+	v, _ := m[strings.ToLower(attr)]
 	return v
 }
 
-func (m *AttributeMap) Put(attr string, value *ldap.EntryAttribute) {
-	m.Attrs[strings.ToLower(attr)] = value
+func (m AttributeMap) Put(attr string, value *ldap.EntryAttribute) {
+	m[strings.ToLower(attr)] = value
 }
 
-func (m *AttributeMap) PutEntryAttribute(value *ldap.EntryAttribute) {
-	m.Put(value.Name, value)
+func (m AttributeMap) PutEntryAttribute(value *ldap.EntryAttribute) {
+	m[strings.ToLower(value.Name)] = value
 }
 
-func (m *AttributeMap) Delete(attr string) {
-	delete(m.Attrs, strings.ToLower(attr))
+func (m AttributeMap) Delete(attr string) {
+	delete(m, strings.ToLower(attr))
 }
 
-func (m *AttributeMap) Rename(from, to string) {
+func (m AttributeMap) Rename(from, to string) {
 	if strings.ToLower(from) == strings.ToLower(to) {
 		return
 	}
 
-	v := m.Get(from)
+	v := m[from]
 
 	if v == nil {
 		return
