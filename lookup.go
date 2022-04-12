@@ -42,7 +42,7 @@ func (c *Conn) QuickSearch(dn string, filter string, attributes []string) (*ldap
 	return c.Search(NewSearchRequest(dn, ldap.ScopeWholeSubtree, ldap.DerefAlways, 0, 0, false, filter, attributes, nil))
 }
 
-// Return value of first (leftmost) RDN that matches attribute name
+// GetAttributeFromDN return value of first (leftmost) RDN that matches attribute name
 func GetAttributeFromDN(attr, dn string) (string, error) {
 	d, err := ldap.ParseDN(dn)
 	if err != nil {

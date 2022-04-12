@@ -12,7 +12,7 @@ func NewAttributeMap() AttributeMap {
 }
 
 func (m AttributeMap) AttributeNames() []string {
-	var names []string
+	var names = make([]string, 0, len(m))
 	for _, a := range m {
 		names = append(names, a.Name)
 	}

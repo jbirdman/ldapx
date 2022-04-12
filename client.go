@@ -1,4 +1,4 @@
-// Package provides a higher level abstration around github.com/go-ldap/ldap/v3
+// Package ldapx provides a higher level abstraction around github.com/go-ldap/ldap/v3
 // that makes use of connection pooling.
 package ldapx
 

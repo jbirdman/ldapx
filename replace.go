@@ -17,19 +17,6 @@ func (e *Entry) ReplaceAttributeValue(attr string, value string) {
 	e.ReplaceAttributeValues(attr, []string{value})
 }
 
-func valuesEqual(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i, _ := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
 func sameStringSlice(x, y []string) bool {
 	if len(x) != len(y) {
 		return false
@@ -45,7 +32,7 @@ func sameStringSlice(x, y []string) bool {
 		if _, ok := diff[_y]; !ok {
 			return false
 		}
-		diff[_y] -= 1
+		diff[_y]--
 		if diff[_y] == 0 {
 			delete(diff, _y)
 		}

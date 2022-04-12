@@ -6,7 +6,7 @@ func NewModifyRequest(dn string, controls []ldap.Control) *ldap.ModifyRequest {
 	return ldap.NewModifyRequest(dn, controls)
 }
 
-func NewPasswordModifyRequesy(userIdentity string, oldPassword string, newPassword string) *ldap.PasswordModifyRequest {
+func NewPasswordModifyRequest(userIdentity string, oldPassword string, newPassword string) *ldap.PasswordModifyRequest {
 	return ldap.NewPasswordModifyRequest(userIdentity, oldPassword, newPassword)
 }
 

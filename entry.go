@@ -43,14 +43,6 @@ type AttributeChange struct {
 	Value  []string
 }
 
-func cloneAttribute(a *ldap.EntryAttribute) *ldap.EntryAttribute {
-	return &ldap.EntryAttribute{
-		Name:       a.Name,
-		Values:     append([]string(nil), a.Values...),
-		ByteValues: append([][]byte(nil), a.ByteValues...),
-	}
-}
-
 func NewEntry(dn string) *Entry {
 	return &Entry{
 		DN:                 dn,
@@ -88,10 +80,6 @@ func (e *Entry) ToLdapEntry() *ldap.Entry {
 
 func (e Entry) Print() {
 	e.ToLdapEntry().Print()
-	//fmt.Printf("DN: %s\n", e.DN)
-	//for _, attr := range e.Attributes {
-	//	attr.Print()
-	//}
 }
 
 func (e Entry) PrettyPrint(indent int) {
