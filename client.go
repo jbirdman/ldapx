@@ -32,6 +32,8 @@ type Client interface {
 	Lookup(dn string) (*Entry, error)
 	QuickSearch(dn string, filter string, attributes []string) (*ldap.SearchResult, error)
 	FindEntry(dn string, filter string, attributes []string) (*Entry, error)
+	RootDSE() (*RootDSE, error)
+	Schema() (*LDAPSchema, error)
 }
 
 var _ Client = &Conn{}
