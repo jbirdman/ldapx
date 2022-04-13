@@ -20,6 +20,7 @@ func TestGetAttributeFromDN(t *testing.T) {
 		{name: "dn does not contain attribute", args: args{attr: "notfound", dn: "uid=test,ou=users,dc=jcu,dc=edu,dc=au"}, want: "", wantErr: true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := GetAttributeFromDN(tt.args.attr, tt.args.dn)
 			if (err != nil) != tt.wantErr {
