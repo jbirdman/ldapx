@@ -20,7 +20,7 @@ func (m AttributeMap) AttributeNames() []string {
 }
 
 func (m AttributeMap) Get(attr string) *ldap.EntryAttribute {
-	v, _ := m[strings.ToLower(attr)]
+	v := m[strings.ToLower(attr)]
 	return v
 }
 
@@ -37,7 +37,7 @@ func (m AttributeMap) Delete(attr string) {
 }
 
 func (m AttributeMap) Rename(from, to string) {
-	if strings.ToLower(from) == strings.ToLower(to) {
+	if strings.EqualFold(from, to) {
 		return
 	}
 
