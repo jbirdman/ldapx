@@ -55,3 +55,8 @@ func (m AttributeMap) Rename(from, to string) {
 	// And delete old attribute
 	m.Delete(from)
 }
+
+func (m AttributeMap) AttributeExists(attr string) bool {
+	_, ok := m[strings.ToLower(attr)]
+	return ok
+}

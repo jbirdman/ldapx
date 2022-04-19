@@ -113,6 +113,10 @@ func (e *Entry) ResetChanges() {
 	e.Changes = nil
 }
 
+func (e *Entry) AttributeExists(attr string) bool {
+	return e.Attributes.AttributeExists(attr)
+}
+
 func (e *Entry) GetAttributeValues(attribute string) []string {
 	v := e.Attributes.Get(attribute)
 	if v == nil {
