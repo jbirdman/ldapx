@@ -15,6 +15,17 @@ func (c *Conn) Lookup(dn string) (*Entry, error) {
 	return NewEntryFromLdapEntry(result.Entries[0]), nil
 }
 
+func (c *Conn) LookupOrNew(dn string) (*Entry, error) {
+	entry, err := c.Lookup(dn)
+	if err != nil {
+		if !ldap.IsErrorWithCode(err, ldap.LDAPResultNoSuchObject) {
+			return nil, err
+		}
+		entry = NewEntry(dn)
+	}
+	return entry, nil
+}
+
 func (c *Conn) FindEntry(dn string, filter string, attributes []string) (*Entry, error) {
 	return FindEntry(c, dn, filter, attributes)
 }

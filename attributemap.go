@@ -41,7 +41,7 @@ func (m AttributeMap) Rename(from, to string) {
 		return
 	}
 
-	v := m[from]
+	v := m[strings.ToLower(from)]
 
 	if v == nil {
 		return

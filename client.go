@@ -8,6 +8,7 @@ import (
 	"github.com/go-baa/pool"
 	"github.com/go-ldap/ldap/v3"
 	"log"
+	"net/url"
 )
 
 type Conn struct {
@@ -30,13 +31,37 @@ type Client interface {
 	Search(*ldap.SearchRequest) (*ldap.SearchResult, error)
 	SearchWithPaging(request *ldap.SearchRequest, pagingSize uint32) (*ldap.SearchResult, error)
 	Lookup(dn string) (*Entry, error)
+	LookupOrNew(dn string) (*Entry, error)
 	QuickSearch(dn string, filter string, attributes []string) (*ldap.SearchResult, error)
 	FindEntry(dn string, filter string, attributes []string) (*Entry, error)
 	RootDSE() (*RootDSE, error)
 	Schema() (*LDAPSchema, error)
+	UpdateEntry(string, EntryUpdateFunc) error
+	Update(entry *Entry) error
 }
 
 var _ Client = &Conn{}
+
+func OpenURLSimple(ldapURL, binddn, bindpw string, insecureSkipVerify bool) (*Conn, error) {
+	host, err := urlHost(ldapURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return OpenURL(ldapURL, binddn, bindpw, &tls.Config{
+		ServerName:         host,
+		InsecureSkipVerify: insecureSkipVerify,
+	})
+}
+
+func urlHost(s string) (string, error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return "", err
+	}
+
+	return u.Host, nil
+}
 
 func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (*Conn, error) {
 	ldapURL, err := ldapurl.Parse(url)
