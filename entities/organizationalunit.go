@@ -2,6 +2,7 @@ package entities
 
 import (
 	"fmt"
+
 	"git.jcu.edu.au/go/ldapx"
 )
 

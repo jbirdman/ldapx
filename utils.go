@@ -1,8 +1,9 @@
 package ldapx
 
 import (
-	"github.com/deckarep/golang-set"
 	"strings"
+
+	"github.com/deckarep/golang-set"
 )
 
 func SliceToInterface(t []string) []interface{} {

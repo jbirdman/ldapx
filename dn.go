@@ -2,8 +2,9 @@ package ldapx
 
 import (
 	"fmt"
-	"github.com/go-ldap/ldap/v3"
 	"strings"
+
+	"github.com/go-ldap/ldap/v3"
 )
 
 type DN ldap.DN
@@ -14,16 +15,15 @@ func ParseDN(str string) (*DN, error) {
 }
 
 func (dn *DN) ToString() string {
-	var dnc = make([]string, 0, len(dn.RDNs))
+	dnc := make([]string, 0, len(dn.RDNs))
 	for _, c := range dn.RDNs {
 		dnc = append(dnc, joinRDNAttrs(c))
-
 	}
 	return strings.Join(dnc, ",")
 }
 
 func joinRDNAttrs(rdn *ldap.RelativeDN) string {
-	var attrs = make([]string, 0, len(rdn.Attributes))
+	attrs := make([]string, 0, len(rdn.Attributes))
 	for _, a := range rdn.Attributes {
 		attrs = append(attrs, fmt.Sprintf("%s=%s", a.Type, a.Value))
 	}
@@ -31,8 +31,8 @@ func joinRDNAttrs(rdn *ldap.RelativeDN) string {
 }
 
 func (dn *DN) Append(attr, value string) {
-	dn.RDNs = append([]*ldap.RelativeDN{&ldap.RelativeDN{
-		Attributes: []*ldap.AttributeTypeAndValue{&ldap.AttributeTypeAndValue{
+	dn.RDNs = append([]*ldap.RelativeDN{{
+		Attributes: []*ldap.AttributeTypeAndValue{{
 			Type:  attr,
 			Value: value,
 		}},

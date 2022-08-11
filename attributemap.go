@@ -1,8 +1,9 @@
 package ldapx
 
 import (
-	"github.com/go-ldap/ldap/v3"
 	"strings"
+
+	"github.com/go-ldap/ldap/v3"
 )
 
 type AttributeMap map[string]*ldap.EntryAttribute
@@ -12,7 +13,7 @@ func NewAttributeMap() AttributeMap {
 }
 
 func (m AttributeMap) AttributeNames() []string {
-	var names = make([]string, 0, len(m))
+	names := make([]string, 0, len(m))
 	for _, a := range m {
 		names = append(names, a.Name)
 	}

@@ -1,8 +1,9 @@
 package ldapx
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewEntry(t *testing.T) {

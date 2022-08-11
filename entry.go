@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-ldap/ldap/v3"
 	"sort"
 	"strings"
+
+	"github.com/go-ldap/ldap/v3"
 )
 
 const (
@@ -48,7 +49,8 @@ func NewEntry(dn string) *Entry {
 		DN:                 dn,
 		Attributes:         NewAttributeMap(),
 		originalAttributes: NewAttributeMap(),
-		ChangeType:         ChangeAdd}
+		ChangeType:         ChangeAdd,
+	}
 }
 
 func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {

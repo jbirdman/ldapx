@@ -4,11 +4,12 @@ package ldapx
 
 import (
 	"crypto/tls"
+	"log"
+	"net/url"
+
 	"git.jcu.edu.au/go/ldapurl"
 	"github.com/go-baa/pool"
 	"github.com/go-ldap/ldap/v3"
-	"log"
-	"net/url"
 )
 
 type Conn struct {

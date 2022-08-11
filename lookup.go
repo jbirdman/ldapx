@@ -2,8 +2,9 @@ package ldapx
 
 import (
 	"fmt"
-	"github.com/go-ldap/ldap/v3"
 	"strings"
+
+	"github.com/go-ldap/ldap/v3"
 )
 
 func (c *Conn) Lookup(dn string) (*Entry, error) {
