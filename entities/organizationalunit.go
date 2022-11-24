@@ -3,7 +3,7 @@ package entities
 import (
 	"fmt"
 
-	"git.jcu.edu.au/go/ldapx"
+	"github.com/jbirdman/ldapx"
 )
 
 func NewOrganizationalUnit(baseDN, ou string) *ldapx.Entry {
