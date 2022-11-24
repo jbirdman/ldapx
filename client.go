@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/url"
 
-	"git.jcu.edu.au/go/ldapurl"
+	"github.com/jbirdman/ldapurl"
 	"github.com/go-baa/pool"
 	"github.com/go-ldap/ldap/v3"
 )
