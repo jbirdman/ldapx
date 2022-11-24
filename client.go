@@ -7,9 +7,9 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/jbirdman/ldapurl"
 	"github.com/go-baa/pool"
 	"github.com/go-ldap/ldap/v3"
+	"github.com/jbirdman/ldapurl"
 )
 
 type Conn struct {
