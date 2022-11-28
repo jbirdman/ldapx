@@ -2,9 +2,10 @@ package ldapx
 
 import (
 	"github.com/go-ldap/ldap/v3"
+	"strings"
 )
 
-func (e *Entry) DeleteAttributeValues(attr string, value []string) {
+func (e *Entry) DeleteAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool) {
 	a := e.Attributes.Get(attr)
 	if a == nil {
 		return
@@ -15,7 +16,7 @@ func (e *Entry) DeleteAttributeValues(attr string, value []string) {
 	for _, o := range a.Values {
 		var found bool
 		for _, d := range value {
-			if o == d {
+			if (o == d) || (ignoreCase && strings.EqualFold(o, d)) {
 				found = true
 				break
 			}
@@ -41,8 +42,16 @@ func (e *Entry) DeleteAttributeValues(attr string, value []string) {
 	}
 }
 
+func (e *Entry) DeleteAttributeValues(attr string, value []string) {
+	e.AddAttributeValuesIgnoreCase(attr, value, false)
+}
+
+func (e *Entry) DeleteAttributeValueIgnoreCase(attr string, value string, ignoreCase bool) {
+	e.DeleteAttributeValuesIgnoreCase(attr, []string{value}, ignoreCase)
+}
+
 func (e *Entry) DeleteAttributeValue(attr string, value string) {
-	e.DeleteAttributeValues(attr, []string{value})
+	e.DeleteAttributeValueIgnoreCase(attr, value, false)
 }
 
 func (e *Entry) DeleteAttribute(attr string) {

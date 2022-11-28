@@ -2,9 +2,10 @@ package ldapx
 
 import (
 	"github.com/go-ldap/ldap/v3"
+	"strings"
 )
 
-func (e *Entry) AddAttributeValues(attr string, value []string) {
+func (e *Entry) AddAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool) {
 	if len(value) == 0 {
 		return
 	}
@@ -21,7 +22,7 @@ func (e *Entry) AddAttributeValues(attr string, value []string) {
 	for _, o := range value {
 		var found bool
 		for _, d := range a.Values {
-			if o == d {
+			if (o == d) || (ignoreCase && strings.EqualFold(o, d)) {
 				found = true
 				break
 			}
@@ -40,6 +41,14 @@ func (e *Entry) AddAttributeValues(attr string, value []string) {
 	}
 }
 
+func (e *Entry) AddAttributeValues(attr string, value []string) {
+	e.AddAttributeValuesIgnoreCase(attr, value, false)
+}
+
+func (e *Entry) AddAttributeValueIgnoreCase(attr string, value string, ignoreCase bool) {
+	e.AddAttributeValuesIgnoreCase(attr, []string{value}, ignoreCase)
+}
+
 func (e *Entry) AddAttributeValue(attr string, value string) {
-	e.AddAttributeValues(attr, []string{value})
+	e.AddAttributeValueIgnoreCase(attr, value, false)
 }

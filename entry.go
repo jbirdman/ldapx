@@ -25,15 +25,24 @@ type Entry struct {
 	originalAttributes AttributeMap
 }
 
+var _ MutableEntry = &Entry{}
+
 type MutableEntry interface {
+	AddAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)
+	AddAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
 	AddAttributeValue(attr string, value string)
 	AddAttributeValues(attr string, value []string)
+	ReplaceAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)
+	ReplaceAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
 	ReplaceAttributeValue(attr string, value string)
 	ReplaceAttributeValues(attr string, value []string)
+	DeleteAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)
+	DeleteAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
 	DeleteAttributeValue(attr string, value string)
 	DeleteAttributeValues(attr string, value []string)
 	DeleteAttribute(attr string)
 	SyncAttributeValues(attr string, value []string)
+	SyncAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
 	Update(conn *Conn) error
 	Changed() bool
 }
@@ -80,19 +89,19 @@ func (e *Entry) ToLdapEntry() *ldap.Entry {
 	return ldap.NewEntry(e.DN, attrs)
 }
 
-func (e Entry) Print() {
+func (e *Entry) Print() {
 	e.ToLdapEntry().Print()
 }
 
-func (e Entry) PrettyPrint(indent int) {
+func (e *Entry) PrettyPrint(indent int) {
 	e.ToLdapEntry().PrettyPrint(indent)
 }
 
-func (e Entry) AttributeNames() []string {
+func (e *Entry) AttributeNames() []string {
 	return e.Attributes.AttributeNames()
 }
 
-func (e Entry) ToLDIF() string {
+func (e *Entry) ToLDIF() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "dn: %s\n", e.DN)
 
@@ -107,7 +116,7 @@ func (e Entry) ToLDIF() string {
 	return b.String()
 }
 
-func (e Entry) Changed() bool {
+func (e *Entry) Changed() bool {
 	return len(e.Changes) > 0
 }
 
@@ -161,7 +170,7 @@ func (e *Entry) Update(conn *Conn) error {
 	return nil
 }
 
-func (e Entry) Clone() *Entry {
+func (e *Entry) Clone() *Entry {
 	dest := NewEntry(e.DN)
 
 	for _, a := range e.AttributeNames() {
@@ -210,7 +219,7 @@ func (e *Entry) RenameAttribute(from, to string) {
 	e.Attributes.Rename(from, to)
 }
 
-func (e Entry) ToJSON() string {
+func (e *Entry) ToJSON() string {
 	b, err := json.Marshal(e)
 	if err != nil {
 		panic(err)
