@@ -43,7 +43,7 @@ func (e *Entry) DeleteAttributeValuesIgnoreCase(attr string, value []string, ign
 }
 
 func (e *Entry) DeleteAttributeValues(attr string, value []string) {
-	e.AddAttributeValuesIgnoreCase(attr, value, false)
+	e.DeleteAttributeValuesIgnoreCase(attr, value, false)
 }
 
 func (e *Entry) DeleteAttributeValueIgnoreCase(attr string, value string, ignoreCase bool) {
