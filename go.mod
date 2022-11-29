@@ -1,9 +1,10 @@
 module github.com/jbirdman/ldapx
 
 require (
-	github.com/deckarep/golang-set v1.8.0
+	github.com/deckarep/golang-set/v2 v2.1.0
 	github.com/go-baa/pool v1.0.0
 	github.com/go-ldap/ldap/v3 v3.4.4
+	github.com/jbirdman/caseinsensitiveset v1.0.1
 	github.com/jbirdman/ldapurl v1.0.5
 	github.com/stretchr/testify v1.8.1
 )
@@ -17,4 +18,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-go 1.17
+go 1.18

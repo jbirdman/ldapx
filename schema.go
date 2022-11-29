@@ -1,6 +1,8 @@
 package ldapx
 
-import "github.com/go-ldap/ldap/v3"
+import (
+	"github.com/go-ldap/ldap/v3"
+)
 
 type LDAPSchema struct {
 	Syntaxes        []string
@@ -23,6 +25,13 @@ type RootDSE struct {
 	SupportedAuthPasswordSchemes []string
 	VendorName                   string
 	VendorVersion                string
+}
+
+type AttributeType struct {
+	OID         string
+	Name        string
+	Syntax      string
+	SingleValue bool
 }
 
 func (c *Conn) Schema() (*LDAPSchema, error) {
@@ -61,8 +70,8 @@ func (c *Conn) Schema() (*LDAPSchema, error) {
 	return nil, err
 }
 
-func (c *Conn) RootDSE() (*RootDSE, error) {
-	result, err := c.Search(NewSearchRequest(
+func rootDSE(conn *ldap.Conn) (*RootDSE, error) {
+	result, err := conn.Search(NewSearchRequest(
 		"",
 		ldap.ScopeBaseObject, ldap.NeverDerefAliases,
 		0, 0, false,
@@ -103,4 +112,21 @@ func (c *Conn) RootDSE() (*RootDSE, error) {
 		}, nil
 	}
 	return nil, nil
+}
+
+func (c *Conn) RootDSE() (*RootDSE, error) {
+	conn, err := getConn(c.pool)
+	if err != nil {
+		return nil, err
+	}
+	defer putConn(c.pool, conn)
+	return rootDSE(conn)
+}
+
+func IsDN(dn string) bool {
+	_, err := ParseDN(dn)
+	if err != nil {
+		return false
+	}
+	return true
 }

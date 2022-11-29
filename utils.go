@@ -1,9 +1,8 @@
 package ldapx
 
 import (
+	"github.com/deckarep/golang-set/v2"
 	"strings"
-
-	"github.com/deckarep/golang-set"
 )
 
 func SliceToInterface(t []string) []interface{} {
@@ -58,8 +57,8 @@ func MapStringSlice(t []string, f func(string) string) []string {
 }
 
 func ContainsAny(a []string, b []string) bool {
-	s1 := mapset.NewSetFromSlice(SliceToInterface(a))
-	s2 := mapset.NewSetFromSlice(SliceToInterface(b))
+	s1 := mapset.NewSet(a...)
+	s2 := mapset.NewSet(b...)
 	return s2.IsSubset(s1)
 }
 

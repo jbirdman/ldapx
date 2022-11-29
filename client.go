@@ -17,6 +17,7 @@ type Conn struct {
 	pool         *pool.Pool
 	bindDN       string
 	bindPassword string
+	schema       *LDAPSchema
 	tlsConfig    *tls.Config
 }
 
@@ -71,14 +72,26 @@ func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Conf
 	}
 
 	pl, err := setupConnectionPool(ldapURL, bindDN, bindPassword, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
 
-	return &Conn{
+	conn := &Conn{
 		ldapURL:      ldapURL,
 		pool:         pl,
 		bindDN:       bindDN,
 		bindPassword: bindPassword,
 		tlsConfig:    tlsConfig,
-	}, err
+	}
+
+	schema, err := conn.Schema()
+	if err != nil {
+		return nil, err
+	}
+
+	conn.schema = schema
+
+	return conn, err
 }
 
 func setupConnectionPool(ldapURL *ldapurl.LdapURL, bindDN string, bindPassword string, tlsConfig *tls.Config) (*pool.Pool, error) {
@@ -125,8 +138,8 @@ func dialURL(ldapURL *ldapurl.LdapURL, tlsConfig *tls.Config) (*ldap.Conn, error
 	return l, err
 }
 
-func (c *Conn) get() (*ldap.Conn, error) {
-	lc, err := c.pool.Get()
+func getConn(pool *pool.Pool) (*ldap.Conn, error) {
+	lc, err := pool.Get()
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +147,16 @@ func (c *Conn) get() (*ldap.Conn, error) {
 	return lc.(*ldap.Conn), err
 }
 
+func putConn(pool *pool.Pool, lc *ldap.Conn) {
+	pool.Put(lc)
+}
+
+func (c *Conn) get() (*ldap.Conn, error) {
+	return getConn(c.pool)
+}
+
 func (c *Conn) put(lc *ldap.Conn) {
-	c.pool.Put(lc)
+	putConn(c.pool, lc)
 }
 
 func (c *Conn) Execute(f func(*ldap.Conn) (interface{}, error)) (interface{}, error) {
