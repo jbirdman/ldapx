@@ -5,10 +5,14 @@ import (
 	"github.com/jbirdman/caseinsensitiveset"
 )
 
+// SyncAttributeValues will add and remove values from the attribute to match the
+// values provided.
 func (e *Entry) SyncAttributeValues(attr string, values []string) {
 	e.SyncAttributeValuesIgnoreCase(attr, values, false)
 }
 
+// SyncAttributeValuesIgnoreCase will add and remove values from the attribute to
+// match the values provided, ignoring case if ignoreCase is true.
 func (e *Entry) SyncAttributeValuesIgnoreCase(attr string, values []string, ignoreCase bool) {
 	if ignoreCase {
 		e.syncAttributeValuesIgnoreCase(attr, values)
@@ -17,6 +21,8 @@ func (e *Entry) SyncAttributeValuesIgnoreCase(attr string, values []string, igno
 	}
 }
 
+// syncAttributeValuesCaseSensitive will add and remove values from the attribute
+// to match the values provided, ignoring case.
 func (e *Entry) syncAttributeValuesIgnoreCase(attr string, value []string) {
 	currentValues := caseinsensitiveset.NewCaseInsensitiveSet(e.GetAttributeValues(attr)...)
 	newValues := caseinsensitiveset.NewCaseInsensitiveSet(value...)
@@ -25,6 +31,8 @@ func (e *Entry) syncAttributeValuesIgnoreCase(attr string, value []string) {
 	e.DeleteAttributeValues(attr, currentValues.Difference(newValues).ToSlice())
 }
 
+// syncAttributeValuesCaseSensitive will add and remove values from the attribute
+// to match the values provided.
 func (e *Entry) syncAttributeValuesCaseSensitive(attr string, value []string) {
 	currentValues := mapset.NewSet(e.GetAttributeValues(attr)...)
 	newValues := mapset.NewSet(value...)

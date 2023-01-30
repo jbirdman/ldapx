@@ -28,31 +28,35 @@ type Entry struct {
 
 var _ MutableEntry = &Entry{}
 
+// MutableEntry is an interface for an entry that can be modified
 type MutableEntry interface {
-	AddAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)
-	AddAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
-	AddAttributeValue(attr string, value string)
-	AddAttributeValues(attr string, value []string)
-	ReplaceAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)
-	ReplaceAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
-	ReplaceAttributeValue(attr string, value string)
-	ReplaceAttributeValues(attr string, value []string)
-	DeleteAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)
-	DeleteAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
-	DeleteAttributeValue(attr string, value string)
-	DeleteAttributeValues(attr string, value []string)
-	DeleteAttribute(attr string)
-	SyncAttributeValues(attr string, value []string)
-	SyncAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)
-	Update(conn *Conn) error
-	Changed() bool
+	AddAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)        // AddAttributeValueIgnoreCase adds a value to an attribute, ignoring case if ignoreCase is true
+	AddAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)     // AddAttributeValuesIgnoreCase adds values to an attribute, ignoring case if ignoreCase is true
+	AddAttributeValue(attr string, value string)                                   // AddAttributeValue adds a value to an attribute
+	AddAttributeValues(attr string, value []string)                                // AddAttributeValues adds values to an attribute
+	ReplaceAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)    // ReplaceAttributeValueIgnoreCase replaces an attribute value, ignoring case if ignoreCase is true
+	ReplaceAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool) // ReplaceAttributeValuesIgnoreCase replaces attribute values, ignoring case if ignoreCase is true
+	ReplaceAttributeValue(attr string, value string)                               // ReplaceAttributeValue replaces an attribute value
+	ReplaceAttributeValues(attr string, value []string)                            // ReplaceAttributeValues replaces attribute values
+	DeleteAttributeValueIgnoreCase(attr string, value string, ignoreCase bool)     // DeleteAttributeValueIgnoreCase deletes an attribute value, ignoring case if ignoreCase is true
+	DeleteAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)  // DeleteAttributeValuesIgnoreCase deletes attribute values, ignoring case if ignoreCase is true
+	DeleteAttributeValue(attr string, value string)                                // DeleteAttributeValue deletes an attribute value
+	DeleteAttributeValues(attr string, value []string)                             // DeleteAttributeValues deletes attribute values
+	DeleteAttribute(attr string)                                                   // DeleteAttribute deletes an attribute
+	SyncAttributeValues(attr string, value []string)                               // SyncAttributeValues syncs an attribute with the given values
+	SyncAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool)    // SyncAttributeValuesIgnoreCase syncs an attribute with the given values, ignoring case if ignoreCase is true
+	Update(conn *Conn) error                                                       // Update updates the entry on the server
+	Changed() bool                                                                 // Changed returns true if the entry has been changed
 }
 
+// AttributeChange represents a change to an attribute
 type AttributeChange struct {
 	Action string
 	Attr   string
 	Value  []string
 }
+
+// convert string slice to an interface slice
 
 // NewEntry creates a new entry with the given DN
 func NewEntry(dn string) *Entry {
@@ -64,7 +68,7 @@ func NewEntry(dn string) *Entry {
 	}
 }
 
-// NewEntryFromLdapEntry creates a new entry from an ldap entry
+// NewEntryFromLdapEntry creates a new entry from a ldap entry
 func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
 	e := NewEntry("")
 
@@ -82,6 +86,7 @@ func NewEntryFromLdapEntry(entry *ldap.Entry) *Entry {
 	return e
 }
 
+// ToLdapEntry converts the ldapx entry to a ldap entry
 func (e *Entry) ToLdapEntry() *ldap.Entry {
 	// Copy the attributes to a map
 	attrs := make(map[string][]string)
@@ -100,16 +105,19 @@ func (e *Entry) Print() {
 	e.ToLdapEntry().Print()
 }
 
+// PrettyPrint prints the entry with the given indent
 func (e *Entry) PrettyPrint(indent int) {
 	// Print the entry
 	e.ToLdapEntry().PrettyPrint(indent)
 }
 
+// AttributeNames returns the names of the attributes
 func (e *Entry) AttributeNames() []string {
 	// Return the attribute names
 	return e.Attributes.AttributeNames()
 }
 
+// ToLDIF converts the entry to LDIF
 func (e *Entry) ToLDIF() string {
 	// Create a string builder
 	var b strings.Builder
@@ -206,6 +214,7 @@ func (e *Entry) Clone() *Entry {
 	return dest
 }
 
+// buildAddRequest builds an add request from the changes
 func buildAddRequest(dn string, changes []AttributeChange) *ldap.AddRequest {
 	// Build the add request
 	r := NewAddRequest(dn, nil)
@@ -224,6 +233,7 @@ func buildAddRequest(dn string, changes []AttributeChange) *ldap.AddRequest {
 	return r
 }
 
+// buildModifyRequest builds a modify request from the changes
 func buildModifyRequest(dn string, changes []AttributeChange) *ldap.ModifyRequest {
 	r := NewModifyRequest(dn, nil)
 
@@ -241,14 +251,17 @@ func buildModifyRequest(dn string, changes []AttributeChange) *ldap.ModifyReques
 	return r
 }
 
+// buildDelRequest builds a delete request
 func buildDelRequest(dn string) *ldap.DelRequest {
 	return NewDelRequest(dn, nil)
 }
 
+// RenameAttribute renames an attribute
 func (e *Entry) RenameAttribute(from, to string) {
 	e.Attributes.Rename(from, to)
 }
 
+// ToJSON returns the entry as a JSON string
 func (e *Entry) ToJSON() string {
 	b, err := json.Marshal(e)
 	if err != nil {

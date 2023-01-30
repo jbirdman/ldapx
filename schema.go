@@ -4,29 +4,32 @@ import (
 	"github.com/go-ldap/ldap/v3"
 )
 
+// LDAPSchema represents the LDAP schema.
 type LDAPSchema struct {
-	Syntaxes        []string
-	MatchingRules   []string
-	MatchingRuleUse []string
-	AttributeTypes  []string
-	ObjectClasses   []string
+	Syntaxes        []string // Attribute syntaxes
+	MatchingRules   []string // Attribute matching rules
+	MatchingRuleUse []string // Attribute matching rule use
+	AttributeTypes  []string // Attribute types
+	ObjectClasses   []string // Object classes
 }
 
+// RootDSE represents the RootDSE.
 type RootDSE struct {
-	SupportedLDAPVersion         []string
-	SupportedControls            []string
-	SupportedExtensions          []string
-	SupportedFeatures            []string
-	SupportedSASLMechanisms      []string
-	SupportedTLSCiphers          []string
-	ConfigContext                string
-	NamingContexts               []string
-	SubschemaSubEntry            string
-	SupportedAuthPasswordSchemes []string
-	VendorName                   string
-	VendorVersion                string
+	SupportedLDAPVersion         []string // LDAP versions supported by the server
+	SupportedControls            []string // Controls supported by the server
+	SupportedExtensions          []string // Extensions supported by the server
+	SupportedFeatures            []string // Features supported by the server
+	SupportedSASLMechanisms      []string // SASL mechanisms supported by the server
+	SupportedTLSCiphers          []string // TLS ciphers supported by the server
+	ConfigContext                string   // Config context
+	NamingContexts               []string // Naming contexts
+	SubschemaSubEntry            string   // Subschema subentry
+	SupportedAuthPasswordSchemes []string // Password schemes supported by the server
+	VendorName                   string   // Vendor name
+	VendorVersion                string   // Vendor version
 }
 
+// AttributeType represents an attribute type.
 type AttributeType struct {
 	OID         string
 	Name        string
@@ -34,12 +37,14 @@ type AttributeType struct {
 	SingleValue bool
 }
 
+// Schema returns the LDAP schema.
 func (c *Conn) Schema() (*LDAPSchema, error) {
 	rootDSE, err := c.RootDSE()
 	if err != nil {
 		return nil, err
 	}
 
+	//
 	result, err := c.Search(NewSearchRequest(
 		rootDSE.SubschemaSubEntry,
 		ldap.ScopeBaseObject, ldap.NeverDerefAliases,
@@ -70,6 +75,7 @@ func (c *Conn) Schema() (*LDAPSchema, error) {
 	return nil, err
 }
 
+// rootDSE returns the RootDSE.
 func rootDSE(conn *ldap.Conn) (*RootDSE, error) {
 	result, err := conn.Search(NewSearchRequest(
 		"",
@@ -114,6 +120,7 @@ func rootDSE(conn *ldap.Conn) (*RootDSE, error) {
 	return nil, nil
 }
 
+// RootDSE returns the RootDSE.
 func (c *Conn) RootDSE() (*RootDSE, error) {
 	conn, err := getConn(c.pool)
 	if err != nil {
@@ -121,12 +128,4 @@ func (c *Conn) RootDSE() (*RootDSE, error) {
 	}
 	defer putConn(c.pool, conn)
 	return rootDSE(conn)
-}
-
-func IsDN(dn string) bool {
-	_, err := ParseDN(dn)
-	if err != nil {
-		return false
-	}
-	return true
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// ReplaceAttributeValuesIgnoreCase	removes all values from the attribute and adds the given values, ignoring case if ignoreCase is true.
 func (e *Entry) ReplaceAttributeValuesIgnoreCase(attr string, value []string, ignoreCase bool) {
 	v := e.Attributes.Get(attr)
 	if v != nil && sameStringSlice(value, v.Values, ignoreCase) {
@@ -14,10 +15,12 @@ func (e *Entry) ReplaceAttributeValuesIgnoreCase(attr string, value []string, ig
 	e.AddAttributeChange("replace", attr, value)
 }
 
+// ReplaceAttributeValues removes all values from the attribute and adds the given values.
 func (e *Entry) ReplaceAttributeValues(attr string, value []string) {
 	e.ReplaceAttributeValuesIgnoreCase(attr, value, false)
 }
 
+// ReplaceAttributeValueIgnoreCase removes all values from the attribute and adds the given value, ignoring case if ignoreCase is true.
 func (e *Entry) ReplaceAttributeValueIgnoreCase(attr string, value string, ignoreCase bool) {
 	e.ReplaceAttributeValuesIgnoreCase(attr, []string{value}, ignoreCase)
 }
@@ -26,6 +29,7 @@ func (e *Entry) ReplaceAttributeValue(attr string, value string) {
 	e.ReplaceAttributeValueIgnoreCase(attr, value, false)
 }
 
+// sameStringSlice compares two string slices and returns true if they are the same, ignoring case if ignoreCase is true.
 func sameStringSlice(x, y []string, ignoreCase bool) bool {
 	if len(x) != len(y) {
 		return false

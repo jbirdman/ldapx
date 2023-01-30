@@ -7,6 +7,7 @@ import (
 	"github.com/go-ldap/ldap/v3"
 )
 
+// Lookup searches for the given DN and returns the entry.
 func (c *Conn) Lookup(dn string) (*Entry, error) {
 	result, err := c.Search(NewSearchRequest(dn, ldap.ScopeBaseObject, ldap.DerefAlways, 1, 0, false, "(objectclass=*)", nil, nil))
 	if err != nil {
@@ -16,6 +17,7 @@ func (c *Conn) Lookup(dn string) (*Entry, error) {
 	return NewEntryFromLdapEntry(result.Entries[0]), nil
 }
 
+// LookupOrNew searches for the given DN and returns the entry if found, otherwise a new entry is created with the given DN.
 func (c *Conn) LookupOrNew(dn string) (*Entry, error) {
 	entry, err := c.Lookup(dn)
 	if err != nil {
@@ -27,10 +29,12 @@ func (c *Conn) LookupOrNew(dn string) (*Entry, error) {
 	return entry, nil
 }
 
+// FindEntry searches using given DN base and returns the first entry that matches the filter.
 func (c *Conn) FindEntry(dn string, filter string, attributes []string) (*Entry, error) {
 	return FindEntry(c, dn, filter, attributes)
 }
 
+// FindEntry searches using given DN base and returns the first entry that matches the filter using the given connection.
 func FindEntry(conn *Conn, dn string, filter string, attributes []string) (*Entry, error) {
 	result, err := conn.QuickSearch(dn, filter, attributes)
 	if err != nil {
@@ -50,6 +54,7 @@ func FindEntry(conn *Conn, dn string, filter string, attributes []string) (*Entr
 	return NewEntryFromLdapEntry(result.Entries[0]), nil
 }
 
+// QuickSearch performs a search using the given DN base, filter and attributes.
 func (c *Conn) QuickSearch(dn string, filter string, attributes []string) (*ldap.SearchResult, error) {
 	return c.Search(NewSearchRequest(dn, ldap.ScopeWholeSubtree, ldap.DerefAlways, 0, 0, false, filter, attributes, nil))
 }
