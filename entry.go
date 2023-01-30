@@ -103,14 +103,14 @@ func (e *Entry) AttributeNames() []string {
 
 func (e *Entry) ToLDIF() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "dn: %s\n", e.DN)
+	_, _ = fmt.Fprintf(&b, "dn: %s\n", e.DN)
 
 	keys := e.AttributeNames()
 	sort.Strings(keys)
 
 	for _, k := range keys {
 		for _, v := range e.Attributes.Get(k).Values {
-			fmt.Fprintf(&b, "%s: %s\n", k, v)
+			_, _ = fmt.Fprintf(&b, "%s: %s\n", k, v)
 		}
 	}
 	return b.String()
