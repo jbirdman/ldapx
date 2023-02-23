@@ -20,11 +20,12 @@ type Conn struct {
 	bindPassword string
 	schema       *LDAPSchema
 	tlsConfig    *tls.Config
+	txConn       *ldap.Conn
 }
 
 // Client represents a client that can execute LDAP operations.
 type Client interface {
-	Execute(f func(*ldap.Conn) (interface{}, error)) (interface{}, error)
+	Execute(f func(*Conn) (interface{}, error)) (interface{}, error)
 	ExecuteAs(dn string, password string, f func(*ldap.Conn) (interface{}, error)) (interface{}, error)
 	Add(*ldap.AddRequest) error
 	Del(*ldap.DelRequest) error
@@ -173,16 +174,37 @@ func putConn(pool *pool.Pool, lc *ldap.Conn) {
 
 // get gets a connection from the pool.
 func (c *Conn) get() (*ldap.Conn, error) {
+	if c.txConn != nil {
+		return c.txConn, nil
+	}
 	return getConn(c.pool)
 }
 
 // put puts a connection back into the pool.
 func (c *Conn) put(lc *ldap.Conn) {
+	if c.txConn != nil && c.txConn == lc {
+		return
+	}
 	putConn(c.pool, lc)
 }
 
-// Execute executes a function with a connection from the pool.
-func (c *Conn) Execute(f func(*ldap.Conn) (interface{}, error)) (interface{}, error) {
+func (c *Conn) NewTx(conn *ldap.Conn) *Conn {
+	return &Conn{
+		txConn: conn,
+	}
+}
+
+func (c *Conn) Execute(f func(*Conn) (interface{}, error)) (interface{}, error) {
+	conn, err := c.get()
+	if err != nil {
+		return nil, err
+	}
+	defer c.put(conn)
+
+	return f(c.NewTx(conn))
+}
+
+func (c *Conn) ExecuteLdap(f func(*ldap.Conn) (interface{}, error)) (interface{}, error) {
 	conn, err := c.get()
 	if err != nil {
 		return nil, err
@@ -213,7 +235,7 @@ func (c *Conn) ExecuteAs(dn string, password string, f func(*ldap.Conn) (interfa
 
 // Search searches the LDAP server.
 func (c *Conn) Search(request *ldap.SearchRequest) (*ldap.SearchResult, error) {
-	result, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	result, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		return conn.Search(request)
 	})
 	if err != nil {
@@ -224,7 +246,7 @@ func (c *Conn) Search(request *ldap.SearchRequest) (*ldap.SearchResult, error) {
 
 // SearchWithPaging searches the LDAP server with paging.
 func (c *Conn) SearchWithPaging(request *ldap.SearchRequest, pagingSize uint32) (*ldap.SearchResult, error) {
-	result, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	result, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		return conn.SearchWithPaging(request, pagingSize)
 	})
 	if err != nil {
@@ -235,7 +257,7 @@ func (c *Conn) SearchWithPaging(request *ldap.SearchRequest, pagingSize uint32) 
 
 // Add adds an entry to the LDAP server.
 func (c *Conn) Add(request *ldap.AddRequest) error {
-	_, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	_, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		return nil, conn.Add(request)
 	})
 	return err
@@ -243,7 +265,7 @@ func (c *Conn) Add(request *ldap.AddRequest) error {
 
 // Del deletes an entry from the LDAP server.
 func (c *Conn) Del(request *ldap.DelRequest) error {
-	_, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	_, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		return nil, conn.Del(request)
 	})
 	return err
@@ -251,7 +273,7 @@ func (c *Conn) Del(request *ldap.DelRequest) error {
 
 // Modify modifies an entry on the LDAP server.
 func (c *Conn) Modify(request *ldap.ModifyRequest) error {
-	_, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	_, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		return nil, conn.Modify(request)
 	})
 	return err
@@ -259,7 +281,7 @@ func (c *Conn) Modify(request *ldap.ModifyRequest) error {
 
 // PasswordModify modifies a user's password on the LDAP server.
 func (c *Conn) PasswordModify(request *ldap.PasswordModifyRequest) (*ldap.PasswordModifyResult, error) {
-	result, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	result, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		return conn.PasswordModify(request)
 	})
 	if err != nil {
@@ -270,7 +292,7 @@ func (c *Conn) PasswordModify(request *ldap.PasswordModifyRequest) (*ldap.Passwo
 
 // Compare compares an attribute value on the LDAP server.
 func (c *Conn) Compare(dn string, attribute string, value string) (bool, error) {
-	result, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	result, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		return conn.Compare(dn, attribute, value)
 	})
 	return result.(bool), err
@@ -278,7 +300,7 @@ func (c *Conn) Compare(dn string, attribute string, value string) (bool, error) 
 
 // CheckBind checks the bind credentials on the LDAP server.
 func (c *Conn) CheckBind(dn string, password string) error {
-	_, err := c.Execute(func(conn *ldap.Conn) (interface{}, error) {
+	_, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
 		err := conn.Bind(dn, password)
 		defer func(c *Conn, conn *ldap.Conn) {
 			_ = c.rebind(conn)
