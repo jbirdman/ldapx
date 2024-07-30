@@ -15,7 +15,8 @@ import (
 // Conn represents a connection to an LDAP server.
 type Conn struct {
 	ldapURL      *ldapurl.LdapURL // LDAP URL
-	pool         *pool.Pool       //
+	url          string
+	pool         *pool.Pool //
 	bindDN       string
 	bindPassword string
 	schema       *LDAPSchema
@@ -74,14 +75,14 @@ func urlHost(s string) (string, error) {
 
 // OpenURL opens a connection to an LDAP server using the provided URL.
 func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (*Conn, error) {
-	// Parse the URL.
+	// Parse the URL
 	ldapURL, err := ldapurl.Parse(url)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set up the connection pool.
-	pl, err := setupConnectionPool(ldapURL, bindDN, bindPassword, tlsConfig)
+	pl, err := setupConnectionPool(url, bindDN, bindPassword, tlsConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +90,7 @@ func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Conf
 	// Create the connection.
 	conn := &Conn{
 		ldapURL:      ldapURL,
+		url:          url,
 		pool:         pl,
 		bindDN:       bindDN,
 		bindPassword: bindPassword,
@@ -107,11 +109,11 @@ func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Conf
 }
 
 // setupConnectionPool sets up the connection pool.
-func setupConnectionPool(ldapURL *ldapurl.LdapURL, bindDN string, bindPassword string, tlsConfig *tls.Config) (*pool.Pool, error) {
+func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (*pool.Pool, error) {
 	//
 	pl, err := pool.New(1, 10, func() interface{} {
 		// Dial the LDAP server.
-		conn, err := dialURL(ldapURL, tlsConfig)
+		conn, err := dialURL(url, tlsConfig)
 		if err != nil {
 			log.Fatalf("create client connection error: %v\n", err)
 		}
@@ -157,18 +159,8 @@ func pingConnection(conn *ldap.Conn) bool {
 }
 
 // dialURL dials the LDAP server.
-func dialURL(ldapURL *ldapurl.LdapURL, tlsConfig *tls.Config) (*ldap.Conn, error) {
-	hostname := ldapURL.BuildHostnamePortString()
-	var l *ldap.Conn
-	var err error
-
-	if ldapURL.IsTLS() {
-		l, err = ldap.DialTLS("tcp", hostname, tlsConfig)
-	} else {
-		l, err = ldap.Dial("tcp", hostname)
-	}
-
-	return l, err
+func dialURL(url string, tlsConfig *tls.Config) (*ldap.Conn, error) {
+	return ldap.DialURL(url, ldap.DialWithTLSConfig(tlsConfig))
 }
 
 // getConn gets a connection from the pool.
