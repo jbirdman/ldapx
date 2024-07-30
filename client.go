@@ -117,7 +117,8 @@ func setupConnectionPool(ldapURL *ldapurl.LdapURL, bindDN string, bindPassword s
 		}
 
 		// Bind to the LDAP server.
-		if bindDN != "" {
+		// If the bind password is empty, attemp an unauthenticated bind
+		if bindPassword != "" {
 			err = conn.Bind(bindDN, bindPassword)
 		} else {
 			err = conn.UnauthenticatedBind(bindDN)
@@ -135,7 +136,8 @@ func setupConnectionPool(ldapURL *ldapurl.LdapURL, bindDN string, bindPassword s
 
 	// Ping the connection.
 	pl.Ping = func(conn interface{}) bool {
-		return true
+
+		return pingConnection(conn.(*ldap.Conn))
 	}
 
 	// Close the connection.
@@ -144,6 +146,14 @@ func setupConnectionPool(ldapURL *ldapurl.LdapURL, bindDN string, bindPassword s
 	}
 
 	return pl, nil
+}
+
+func pingConnection(conn *ldap.Conn) bool {
+	_, err := conn.Search(ldap.NewSearchRequest("", ldap.ScopeBaseObject, ldap.DerefAlways, 0, 0, false, "(objectclass=*)", nil, nil))
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 // dialURL dials the LDAP server.
