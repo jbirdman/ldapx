@@ -117,7 +117,11 @@ func setupConnectionPool(ldapURL *ldapurl.LdapURL, bindDN string, bindPassword s
 		}
 
 		// Bind to the LDAP server.
-		err = conn.Bind(bindDN, bindPassword)
+		if bindDN != "" {
+			err = conn.Bind(bindDN, bindPassword)
+		} else {
+			err = conn.UnauthenticatedBind(bindDN)
+		}
 		if err != nil {
 			conn.Close()
 			log.Fatalf("create client connection bind error: %v\n", err)
