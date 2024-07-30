@@ -108,6 +108,13 @@ func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Conf
 	return conn, err
 }
 
+func bind(conn *ldap.Conn, bindDN string, bindPassword string) error {
+	if bindPassword == "" {
+		return conn.UnauthenticatedBind(bindDN)
+	}
+	return conn.Bind(bindDN, bindPassword)
+}
+
 // setupConnectionPool sets up the connection pool.
 func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (*pool.Pool, error) {
 	//
@@ -120,11 +127,7 @@ func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConf
 
 		// Bind to the LDAP server.
 		// If the bind password is empty, attemp an unauthenticated bind
-		if bindPassword != "" {
-			err = conn.Bind(bindDN, bindPassword)
-		} else {
-			err = conn.UnauthenticatedBind(bindDN)
-		}
+		err = bind(conn, bindDN, bindPassword)
 		if err != nil {
 			conn.Close()
 			log.Fatalf("create client connection bind error: %v\n", err)
@@ -138,7 +141,6 @@ func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConf
 
 	// Ping the connection.
 	pl.Ping = func(conn interface{}) bool {
-
 		return pingConnection(conn.(*ldap.Conn))
 	}
 
@@ -228,7 +230,7 @@ func (c *Conn) ExecuteAs(dn string, password string, f func(*ldap.Conn) (interfa
 	}
 	defer c.put(conn)
 
-	err = conn.Bind(dn, password)
+	err = bind(conn, dn, password)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +309,7 @@ func (c *Conn) Compare(dn string, attribute string, value string) (bool, error) 
 // CheckBind checks the bind credentials on the LDAP server.
 func (c *Conn) CheckBind(dn string, password string) error {
 	_, err := c.ExecuteLdap(func(conn *ldap.Conn) (interface{}, error) {
-		err := conn.Bind(dn, password)
+		err := bind(conn, dn, password)
 		defer func(c *Conn, conn *ldap.Conn) {
 			_ = c.rebind(conn)
 		}(c, conn)
@@ -318,5 +320,5 @@ func (c *Conn) CheckBind(dn string, password string) error {
 
 // rebind rebinds to the LDAP server.
 func (c *Conn) rebind(conn *ldap.Conn) error {
-	return conn.Bind(c.bindDN, c.bindPassword)
+	return bind(conn, c.bindDN, c.bindPassword)
 }
