@@ -125,8 +125,8 @@ func bind(conn *ldap.Conn, bindDN string, bindPassword string) error {
 func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (pool.Pool, error) {
 	//
 	pl, err := pool.NewChannelPool(&pool.Config{
-		InitialCap:  1,
-		MaxIdle:     0,
+		InitialCap:  0,
+		MaxIdle:     1,
 		MaxCap:      10,
 		IdleTimeout: 60 * time.Second,
 		Factory: func() (interface{}, error) {
