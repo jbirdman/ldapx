@@ -4,19 +4,18 @@ package ldapx
 
 import (
 	"crypto/tls"
-	"log"
-	"net/url"
-
-	"github.com/go-baa/pool"
+	"fmt"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/jbirdman/ldapurl"
+	"github.com/silenceper/pool"
+	"net/url"
 )
 
 // Conn represents a connection to an LDAP server.
 type Conn struct {
 	ldapURL      *ldapurl.LdapURL // LDAP URL
 	url          string
-	pool         *pool.Pool //
+	pool         pool.Pool //
 	bindDN       string
 	bindPassword string
 	schema       *LDAPSchema
@@ -44,6 +43,7 @@ type Client interface {
 	Schema() (*LDAPSchema, error)
 	UpdateEntry(string, EntryUpdateFunc) error
 	Update(entry *Entry) error
+	Close() error
 }
 
 var _ Client = &Conn{}
@@ -108,6 +108,11 @@ func OpenURL(url string, bindDN string, bindPassword string, tlsConfig *tls.Conf
 	return conn, err
 }
 
+func (c *Conn) Close() error {
+	c.pool.Release()
+	return nil
+}
+
 func bind(conn *ldap.Conn, bindDN string, bindPassword string) error {
 	if bindPassword == "" {
 		return conn.UnauthenticatedBind(bindDN)
@@ -116,48 +121,45 @@ func bind(conn *ldap.Conn, bindDN string, bindPassword string) error {
 }
 
 // setupConnectionPool sets up the connection pool.
-func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (*pool.Pool, error) {
+func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (pool.Pool, error) {
 	//
-	pl, err := pool.New(1, 10, func() interface{} {
-		// Dial the LDAP server.
-		conn, err := dialURL(url, tlsConfig)
-		if err != nil {
-			log.Fatalf("create client connection error: %v\n", err)
-		}
+	pl, err := pool.NewChannelPool(&pool.Config{
+		InitialCap: 1,
+		MaxIdle:    0,
+		MaxCap:     10,
+		Factory: func() (interface{}, error) {
+			// Dial the LDAP server.
+			conn, err := dialURL(url, tlsConfig)
+			if err != nil {
+				return nil, fmt.Errorf("create client connection error: %w", err)
+			}
 
-		// Bind to the LDAP server.
-		// If the bind password is empty, attemp an unauthenticated bind
-		err = bind(conn, bindDN, bindPassword)
-		if err != nil {
-			conn.Close()
-			log.Fatalf("create client connection bind error: %v\n", err)
-		}
+			// Bind to the LDAP server.
+			err = bind(conn, bindDN, bindPassword)
+			if err != nil {
+				conn.Close()
+				return nil, fmt.Errorf("create client connection bind error: %w", err)
+			}
 
-		return conn
+			return conn, nil
+		},
+		Close: func(conn interface{}) error {
+			return conn.(*ldap.Conn).Close()
+		},
+		Ping: func(conn interface{}) error {
+			return pingConnection(conn.(*ldap.Conn))
+		},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Ping the connection.
-	pl.Ping = func(conn interface{}) bool {
-		return pingConnection(conn.(*ldap.Conn))
-	}
-
-	// Close the connection.
-	pl.Close = func(conn interface{}) {
-		conn.(*ldap.Conn).Close()
-	}
-
 	return pl, nil
 }
 
-func pingConnection(conn *ldap.Conn) bool {
+func pingConnection(conn *ldap.Conn) error {
 	_, err := conn.Search(ldap.NewSearchRequest("", ldap.ScopeBaseObject, ldap.DerefAlways, 0, 0, false, "(objectclass=*)", nil, nil))
-	if err != nil {
-		return false
-	}
-	return true
+	return err
 }
 
 // dialURL dials the LDAP server.
@@ -166,7 +168,7 @@ func dialURL(url string, tlsConfig *tls.Config) (*ldap.Conn, error) {
 }
 
 // getConn gets a connection from the pool.
-func getConn(pool *pool.Pool) (*ldap.Conn, error) {
+func getConn(pool pool.Pool) (*ldap.Conn, error) {
 	lc, err := pool.Get()
 	if err != nil {
 		return nil, err
@@ -176,7 +178,7 @@ func getConn(pool *pool.Pool) (*ldap.Conn, error) {
 }
 
 // putConn puts a connection back into the pool.
-func putConn(pool *pool.Pool, lc *ldap.Conn) {
+func putConn(pool pool.Pool, lc *ldap.Conn) {
 	pool.Put(lc)
 }
 
