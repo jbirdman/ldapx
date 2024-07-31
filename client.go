@@ -9,6 +9,7 @@ import (
 	"github.com/jbirdman/ldapurl"
 	"github.com/silenceper/pool"
 	"net/url"
+	"time"
 )
 
 // Conn represents a connection to an LDAP server.
@@ -124,9 +125,10 @@ func bind(conn *ldap.Conn, bindDN string, bindPassword string) error {
 func setupConnectionPool(url string, bindDN string, bindPassword string, tlsConfig *tls.Config) (pool.Pool, error) {
 	//
 	pl, err := pool.NewChannelPool(&pool.Config{
-		InitialCap: 1,
-		MaxIdle:    0,
-		MaxCap:     10,
+		InitialCap:  1,
+		MaxIdle:     0,
+		MaxCap:      10,
+		IdleTimeout: 60 * time.Second,
 		Factory: func() (interface{}, error) {
 			// Dial the LDAP server.
 			conn, err := dialURL(url, tlsConfig)
