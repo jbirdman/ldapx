@@ -2,7 +2,6 @@ module github.com/jbirdman/ldapx
 
 require (
 	github.com/deckarep/golang-set/v2 v2.7.0
-	github.com/go-baa/pool v1.1.1
 	github.com/go-ldap/ldap/v3 v3.4.10
 	github.com/jbirdman/caseinsensitiveset v1.0.1
 	github.com/jbirdman/ldapurl v1.0.5
@@ -15,7 +14,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
