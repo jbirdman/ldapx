@@ -1,18 +1,24 @@
-name: Actions Runner Controller Demo
+name: Local Actions
 on:
   workflow_dispatch:
 
 jobs:
-  Explore-GitHub-Actions:
+  build-ldapx:
     # You need to use the INSTALLATION_NAME from the previous step
     runs-on: arc-runner-set
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v3
+    - name: Set up GCC
+      uses: egor-tensin/setup-gcc@v1
       with:
-        go-version: 1.18
+        version: latest
+        platform: x64
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: 'go.mod'
 
     - name: Build
       run: go build -v ./...
